@@ -1,11 +1,14 @@
-import React from "react";
-import { Allotment } from "allotment";
+import React, { useCallback, useEffect, useRef } from "react";
+import { Allotment, AllotmentHandle } from "allotment";
 import styled from "styled-components";
 import { EntriesList } from "./EntriesList";
 import { EntryDetails } from "./EntryDetails";
 import { GroupsList } from "./GroupsList";
+import { getPanelSizes, setPanelSizes } from "../../services/panelStorage";
 
 import "./styles/vault-ui.sass";
+
+const PANEL_KEY = "vault-split";
 
 const GridWrapper = styled.div`
     position: relative;
@@ -13,9 +16,28 @@ const GridWrapper = styled.div`
 `;
 
 export const VaultUI = () => {
+    const allotmentRef = useRef<AllotmentHandle>(null);
+
+    useEffect(() => {
+        getPanelSizes(PANEL_KEY).then((sizes) => {
+            if (sizes && allotmentRef.current) {
+                allotmentRef.current.resize(sizes);
+            }
+        });
+    }, []);
+
+    const handleDragEnd = useCallback((sizes: number[]) => {
+        console.log("[VaultUI] onDragEnd:", sizes);
+        setPanelSizes(PANEL_KEY, sizes);
+    }, []);
+
+    const handleChange = useCallback((sizes: number[]) => {
+        console.log("[VaultUI] onChange:", sizes);
+    }, []);
+
     return (
         <GridWrapper>
-            <Allotment>
+            <Allotment ref={allotmentRef} onDragEnd={handleDragEnd} onChange={handleChange}>
                 <Allotment.Pane>
                     <GroupsList />
                 </Allotment.Pane>
